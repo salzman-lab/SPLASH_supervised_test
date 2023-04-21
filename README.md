@@ -1,5 +1,5 @@
-# NOMAD_GLM_supervised_test
-The repository contains the script for performing GLM with lasso-based multinomial regression 
+# NOMAD GLM-based supervised test
+The repository contains the script for performing multinomial regression with lasso to identify and visualize anchors with metadata-dependent target fraction  
 
 ## Inputs:
 - `directory`: NOMAD run directory
