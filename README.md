@@ -15,7 +15,21 @@ The repository contains the script for performing GLM with lasso-based multinomi
 
 ## example commands:
 - specific list of anchors:
-`Rscript NOMAD_spervised_anchor.R /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/runs/CCLE_all/ /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/utility_files/CCLE_metadata_modified.tsv one_unaligned_target_anchors /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/runs/CCLE_all/concatentaion_based_classified_compactors_one_SJ_one_unaligned.tsv`
+```
+Rscript NOMAD_spervised_anchor.R /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/runs/CCLE_all/ /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/utility_files/CCLE_metadata_modified.tsv one_unaligned_target_anchors /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/runs/CCLE_all/concatentaion_based_classified_compactors_one_SJ_one_unaligned.tsv
+```
 
 - anchors with the highest effect size:
- `Rscript NOMAD_spervised_anchor.R /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/runs/CCLE_all/ /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/utility_files/CCLE_metadata_modified.tsv one_unaligned_target_anchors 0.4 20000`
+ ```
+Rscript NOMAD_spervised_anchor.R /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/runs/CCLE_all/ /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/utility_files/CCLE_metadata_modified.tsv one_unaligned_target_anchors 0.4 20000
+```
+## metadata file format:
+The only requirement for metadata file is that the first column must contain sample names and the second column must contain the assigned class/group/category/celltype to each sample and that the first line shoule be column lines (column names can be anything). The two columns are renamed as "sample_name" and "group" in the script. Below is an example metadata file:
+```
+Run	type
+SRR8788980	carcinoma
+SRR8788981	melanoma
+SRR8788982	lymphoma
+SRR8788983	carcinoma
+SRR8657060	carcinoma
+```
