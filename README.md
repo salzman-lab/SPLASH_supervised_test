@@ -10,8 +10,8 @@ The repository contains the script for performing multinomial regression with la
 - `num_anchors`: maximum number of anchors to be tested
 
 ## Two options for providing anchors:
-- a specific list of anchors can be provided by the user which then every anchor in the list will be tested
-- If `sample_fraction_cutoff` and `num_anchors` are provided, among the anchors in `result.after_correction.scores.csv` that are in at least  `sample_fraction_cutoff`% of samples, and have `avg_hamming_distance_max_target` >5, the top `num_anchors` with the highest effect size are selected for being tested by the GLM approach. 
+- providing a list of anchors: each anchor in the list will be considered
+- specifying `sample_fraction_cutoff` and `num_anchors`: In this case, among the anchors in `result.after_correction.scores.csv` that are in at least  `sample_fraction_cutoff` of samples, and have `avg_hamming_distance_max_target` >5, the top `num_anchors` with the highest effect size are selected to be tested by the GLM. 
 
 ## example commands:
 - specific list of anchors:
