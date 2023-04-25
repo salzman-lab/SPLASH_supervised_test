@@ -82,7 +82,7 @@ for (counter in 1:nrow(selected_anchors)){
     top_two_targets = counts_anchor[!duplicated(target)][order(-target_count)]$target[1:2] # find the top two targets
     counts_anchor = counts_anchor[target %in% top_two_targets]
     
-    counts_anchor[,anchor_count_per_sample:=sum(count),by=paste(anchor,sample_name)]
+    counts_anchor[,anchor_count_per_sample:=sum(count),by=list(anchor,sample_name)]
     counts_anchor[,fraction:=count/anchor_count_per_sample,by=1:nrow(counts_anchor)] # compute target fraction per sample
     counts_anchor_reshape = reshape(counts_anchor[,list(sample_name,target,fraction,count)], idvar="sample_name", timevar="target", direction="wide")
     names(counts_anchor_reshape) = c("sample_name","target1_frac","target1_count","target2_frac","target2_count")
