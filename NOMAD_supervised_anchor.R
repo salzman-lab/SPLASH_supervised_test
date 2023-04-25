@@ -32,7 +32,7 @@ sample_name_id_conversion = fread(paste(directory,"sample_name_to_id.mapping.txt
 
 ################################################################
 ##### select the anchors for the supervised GLM when no specific list of anchors is provided ################
-if (length(args) == 4){
+if (length(args) == 5){
   anchors = fread(paste(directory,"result.after_correction.scores.csv",sep=""),select = c("anchor", "effect_size_bin", "number_nonzero_samples", "most_freq_target_1", "cnt_most_freq_target_1", "most_freq_target_2", "cnt_most_freq_target_2","avg_hamming_distance_max_target"))
   max_sample_num = max(anchors$number_nonzero_samples,na.rm = TRUE)
   anchors = anchors[number_nonzero_samples > (max_sample_num * anchor_sample_fraction_cutoff) & avg_hamming_distance_max_target > 5] ## keep only anchors that are in at least the given fraction of samples 
