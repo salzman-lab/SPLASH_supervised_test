@@ -79,29 +79,45 @@ for (counter in 1:nrow(selected_anchors)){
     anchor_interest = selected_anchors$anchor[counter]
     counts_anchor = counts[anchor==anchor_interest] # target counts for the selected anchor 
     counts_anchor[,target_count := sum(count),by=target] # compute total counts for each target
-    top_two_targets = counts_anchor[!duplicated(target)][order(-target_count)]$target[1:2] # find the top two targets
-    counts_anchor = counts_anchor[target %in% top_two_targets]
+    top_targets = counts_anchor[!duplicated(target)][order(-target_count)]$target[1:4] # find the top two targets
+    counts_anchor = counts_anchor[target %in% top_targets][order(-target_count)]
     
     counts_anchor[,anchor_count_per_sample:=sum(count),by=list(anchor,sample_name)]
     counts_anchor[,fraction:=count/anchor_count_per_sample,by=1:nrow(counts_anchor)] # compute target fraction per sample
     counts_anchor_reshape = reshape(counts_anchor[,list(sample_name,target,fraction,count)], idvar="sample_name", timevar="target", direction="wide")
-    names(counts_anchor_reshape) = c("sample_name","target1_frac","target1_count","target2_frac","target2_count")
-    counts_anchor_reshape[is.na(target1_frac),target1_frac:=0]
-    counts_anchor_reshape[is.na(target2_frac),target2_frac:=0]
-    counts_anchor_reshape[is.na(target1_count),target1_count:=0]
-    counts_anchor_reshape[is.na(target2_count),target2_count:=0]
+    
+    if (ncol(counts_anchor_reshape) == 9){
+      names(counts_anchor_reshape) = c("sample_name","target1_frac","target1_count","target2_frac","target2_count","target3_frac","target3_count","target4_frac","target4_count")
+    } else if (ncol(counts_anchor_reshape) == 7){
+      names(counts_anchor_reshape) = c("sample_name","target1_frac","target1_count","target2_frac","target2_count","target3_frac","target3_count")
+    }else if (ncol(counts_anchor_reshape) == 5){
+      names(counts_anchor_reshape) = c("sample_name","target1_frac","target1_count","target2_frac","target2_count")
+    }
+    
+    counts_anchor_reshape_wo_sample_name = copy(counts_anchor_reshape) # because I need to change all NAs in the data table to 0, I first make a copy by removing sample_name column and then change all NA to 0 in it 
+    counts_anchor_reshape_wo_sample_name[,sample_name:=NULL]
+    setnafill(counts_anchor_reshape_wo_sample_name,fill=0)
+    counts_anchor_reshape = cbind(counts_anchor_reshape$sample_name,counts_anchor_reshape_wo_sample_name)
+    names(counts_anchor_reshape)[1] = "sample_name"
+
     
     sample_names = data.table(counts_anchor_reshape$sample_name)
     sample_names = merge(sample_names,counts_anchor[!duplicated(sample_name),list(sample_name,group)],all.x=TRUE,all.y = FALSE,by.x="V1",by.y="sample_name")
-    sample_names[,class:=as.numeric(as.factor(group))] # class is the numeric conversion of the groups which is needed for the multinomnial GLM
+    sample_names[,class:=as.numeric(as.factor(group))] # class is the numeric conversion of the groups which is needed for the multinomial GLM
     
     counts_anchor_reshape[,sample_name:=NULL]
     
-    regression_formula = as.formula( "class ~ target1_frac + target2_frac")
+    if (ncol(counts_anchor_reshape) == 8){
+      regression_formula = as.formula( "class ~ target1_frac + target2_frac + target3_frac + target4_frac")
+    } else if (ncol(counts_anchor_reshape) == 6){
+      regression_formula = as.formula( "class ~ target1_frac + target2_frac + target3_frac")
+    }else if (ncol(counts_anchor_reshape) == 4){
+      regression_formula = as.formula( "class ~ target1_frac + target2_frac")
+    }
+    
     
     counts_anchor_reshape = cbind(counts_anchor_reshape,sample_names$group,sample_names$class)
-    colnames(counts_anchor_reshape)[5] = "group"
-    colnames(counts_anchor_reshape)[6] = "class"
+    setnames(counts_anchor_reshape, c("V2","V3"), c("group","class"))
     counts_anchor_reshape = counts_anchor_reshape[!is.na(group)] 
     counts_anchor_reshape[,num_per_group:=.N,by=group]
     counts_anchor_reshape[,weight:=1/num_per_group]
@@ -110,7 +126,7 @@ for (counter in 1:nrow(selected_anchors)){
     # below if there is at least two groups for the anchor we perform GLMnet multinomial regression 
     if (length(unique(counts_anchor_reshape$group))>1){
       x_glmnet = model.matrix(regression_formula, counts_anchor_reshape)
-      glmnet_model = cv.glmnet(x_glmnet, as.factor(counts_anchor_reshape$group), family = c("multinomial"), intercept = FALSE, alpha = 1, nlambda = 50, nfolds = 5, weights = counts_anchor_reshape$weight)
+      glmnet_model = cv.glmnet(x_glmnet, as.factor(counts_anchor_reshape$group), family = c("multinomial"), intercept = FALSE, alpha = 1, nlambda = 50, nfolds = 4, weights = counts_anchor_reshape$weight)
       glmnet_coeffs = coef(glmnet_model)
       
       largest_GLM_coefficient = max(unlist(lapply(lapply(glmnet_coeffs,abs),max))) # this will give us the GLM coefficient with the highest magnitude
@@ -123,7 +139,14 @@ for (counter in 1:nrow(selected_anchors)){
         
         #generate and write boxplot/scatterplot for the anchor
         pdf(file=paste(directory, "/",run_name,"_supervised_metadata/plots/", anchor_interest, ".pdf", sep = ""), width = 8, height = 6)
-        g1 = ggplot(counts_anchor_reshape, aes(y = target1_frac, x = as.factor(group), color = as.factor(group))) + geom_boxplot() + theme_bw() +ggtitle(anchor_interest)
+        if (ncol(counts_anchor_reshape) ==12){
+        long_counts_anchor_reshape <- melt(setDT(counts_anchor_reshape[,list(target1_frac,target2_frac,target3_frac,target4_frac,group)]), id.vars = c("group"))
+        } else if (ncol(counts_anchor_reshape) ==10){
+          long_counts_anchor_reshape <- melt(setDT(counts_anchor_reshape[,list(target1_frac,target2_frac,target3_frac,group)]), id.vars = c("group"))
+        } else if(ncol(counts_anchor_reshape) == 8){
+          long_counts_anchor_reshape <- melt(setDT(counts_anchor_reshape[,list(target1_frac,target2_frac,group)]), id.vars = c("group"))
+        } 
+        g1 = ggplot(long, aes(x=group, y=value, fill=as.factor(variable))) + geom_boxplot() + theme_bw() +ggtitle(anchor_interest)
         g2 = ggplot(counts_anchor_reshape, aes(x = target1_count, y = target2_count, shape = as.factor(group), color = as.factor(group))) + geom_point() + theme_bw()
         print(grid.arrange(g1, g2, nrow = 2))
         dev.off()
@@ -131,6 +154,6 @@ for (counter in 1:nrow(selected_anchors)){
     }
   },error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
 }
-write.table(GLM_output_dt, paste(directory,"/",run_name,"_supervised_metadata/GLM_supervised_file.tsv", sep = ""), sep = "\t", row.names = FALSE, quote = FALSE)
+write.table(GLM_output_dt, paste(directory,"/",run_name,"_supervised_metadata/GLM_supervised_anchors.tsv", sep = ""), sep = "\t", row.names = FALSE, quote = FALSE)
 ######################################################################################
 ######################################################################################
