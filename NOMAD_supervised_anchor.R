@@ -146,7 +146,7 @@ for (counter in 1:nrow(selected_anchors)){
         } else if(ncol(counts_anchor_reshape) == 8){
           long_counts_anchor_reshape <- melt(setDT(counts_anchor_reshape[,list(target1_frac,target2_frac,group)]), id.vars = c("group"))
         } 
-        g1 = ggplot(long, aes(x=group, y=value, fill=as.factor(variable))) + geom_boxplot() + theme_bw() +ggtitle(anchor_interest)
+        g1 = ggplot(long_counts_anchor_reshape, aes(x=group, y=value, fill=as.factor(variable))) + geom_boxplot() + theme_bw() +ggtitle(anchor_interest)
         g2 = ggplot(counts_anchor_reshape, aes(x = target1_count, y = target2_count, shape = as.factor(group), color = as.factor(group))) + geom_point() + theme_bw()
         print(grid.arrange(g1, g2, nrow = 2))
         dev.off()
