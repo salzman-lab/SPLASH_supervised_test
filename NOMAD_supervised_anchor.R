@@ -2,6 +2,7 @@ library(data.table)
 library(glmnet)
 library(ggplot2)
 library(gridExtra)
+library(pheatmap)
 
 # script only looks at the first column of the metadata file (for sample names) and the second column (for the assigned class/group/category/celltype to each sample)
 # metadata file must have column names and they could be anything, after reading in metadata file, the two columns are named as "sample_name" and "group"
