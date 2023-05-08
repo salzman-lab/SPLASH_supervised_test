@@ -80,15 +80,20 @@ for (counter in 1:nrow(selected_anchors)){
     counts_anchor = counts[anchor==anchor_interest] # target counts for the selected anchor 
     counts_anchor[,target_count := sum(count),by=target] # compute total counts for each target
     top_targets = counts_anchor[!duplicated(target)][order(-target_count)]$target[1:4] # find the top two targets
-    counts_anchor = counts_anchor[target %in% top_targets][order(-target_count)]
+    counts_anchor[!target%in%top_targets,target:="other"] # assigning all targets after target 4 to other targets
+    counts_anchor = rbind(counts_anchor[target %in% top_targets][order(-target_count)],counts_anchor[target=="other"]) # add all "other" targets to the end of the counts_anchor
+    counts_anchor[,target_count := sum(count),by=target] # again recompute target count as now I have collapsed targets after target 4 to "other" targets
+    counts_anchor = counts_anchor[!duplicated(paste(anchor,target,sample_name))] # remove duplicate entires whenere there are now multiple other targets per anchor and sample
     
     counts_anchor[,anchor_count_per_sample:=sum(count),by=list(anchor,sample_name)]
     counts_anchor[,fraction:=count/anchor_count_per_sample,by=1:nrow(counts_anchor)] # compute target fraction per sample
     counts_anchor_reshape = reshape(counts_anchor[,list(sample_name,target,fraction,count)], idvar="sample_name", timevar="target", direction="wide")
     
-    if (ncol(counts_anchor_reshape) == 9){
+    if (ncol(counts_anchor_reshape) == 11){
+      names(counts_anchor_reshape) = c("sample_name","target1_frac","target1_count","target2_frac","target2_count","target3_frac","target3_count","target4_frac","target4_count","other_frac","other_count")
+    } else if (ncol(counts_anchor_reshape) == 9){
       names(counts_anchor_reshape) = c("sample_name","target1_frac","target1_count","target2_frac","target2_count","target3_frac","target3_count","target4_frac","target4_count")
-    } else if (ncol(counts_anchor_reshape) == 7){
+    }else if (ncol(counts_anchor_reshape) == 7){
       names(counts_anchor_reshape) = c("sample_name","target1_frac","target1_count","target2_frac","target2_count","target3_frac","target3_count")
     }else if (ncol(counts_anchor_reshape) == 5){
       names(counts_anchor_reshape) = c("sample_name","target1_frac","target1_count","target2_frac","target2_count")
@@ -99,7 +104,7 @@ for (counter in 1:nrow(selected_anchors)){
     setnafill(counts_anchor_reshape_wo_sample_name,fill=0)
     counts_anchor_reshape = cbind(counts_anchor_reshape$sample_name,counts_anchor_reshape_wo_sample_name)
     names(counts_anchor_reshape)[1] = "sample_name"
-
+    
     
     sample_names = data.table(counts_anchor_reshape$sample_name)
     sample_names = merge(sample_names,counts_anchor[!duplicated(sample_name),list(sample_name,group)],all.x=TRUE,all.y = FALSE,by.x="V1",by.y="sample_name")
@@ -107,9 +112,11 @@ for (counter in 1:nrow(selected_anchors)){
     
     counts_anchor_reshape[,sample_name:=NULL]
     
-    if (ncol(counts_anchor_reshape) == 8){
+    if (ncol(counts_anchor_reshape) == 10){
+      regression_formula = as.formula( "class ~ target1_frac + target2_frac + target3_frac + target4_frac + other_frac")
+    } else if (ncol(counts_anchor_reshape) == 8){
       regression_formula = as.formula( "class ~ target1_frac + target2_frac + target3_frac + target4_frac")
-    } else if (ncol(counts_anchor_reshape) == 6){
+    }else if (ncol(counts_anchor_reshape) == 6){
       regression_formula = as.formula( "class ~ target1_frac + target2_frac + target3_frac")
     }else if (ncol(counts_anchor_reshape) == 4){
       regression_formula = as.formula( "class ~ target1_frac + target2_frac")
@@ -138,17 +145,30 @@ for (counter in 1:nrow(selected_anchors)){
         GLM_output_dt = rbind(GLM_output_dt, GLM_output_dt_anchor)
         
         #generate and write boxplot/scatterplot for the anchor
-        pdf(file=paste(directory, "/",run_name,"_supervised_metadata/plots/", anchor_interest, ".pdf", sep = ""), width = 8, height = 6)
-        if (ncol(counts_anchor_reshape) ==12){
-        long_counts_anchor_reshape <- melt(setDT(counts_anchor_reshape[,list(target1_frac,target2_frac,target3_frac,target4_frac,group)]), id.vars = c("group"))
+        pdf(file=paste(directory, "/",run_name,"_supervised_metadata/plots/", anchor_interest, ".pdf", sep = ""), width = 12, height = 6)
+        if (ncol(counts_anchor_reshape) ==14){
+          long_counts_anchor_reshape <- melt(setDT(counts_anchor_reshape[,list(target1_frac, target2_frac, target3_frac, target4_frac, other_frac, group)]), id.vars = c("group"))
+          counts_anchor_reshape_df = data.frame(counts_anchor_reshape[,list(target1_frac,target2_frac,target3_frac,target4_frac,other_frac)])
+        } else if (ncol(counts_anchor_reshape) ==12){
+          long_counts_anchor_reshape <- melt(setDT(counts_anchor_reshape[,list(target1_frac, target2_frac, target3_frac, target4_frac, group)]), id.vars = c("group"))
+          counts_anchor_reshape_df = data.frame(counts_anchor_reshape[,list(target1_frac,target2_frac,target3_frac,target4_frac)])
         } else if (ncol(counts_anchor_reshape) ==10){
-          long_counts_anchor_reshape <- melt(setDT(counts_anchor_reshape[,list(target1_frac,target2_frac,target3_frac,group)]), id.vars = c("group"))
+          long_counts_anchor_reshape <- melt(setDT(counts_anchor_reshape[,list(target1_frac, target2_frac, target3_frac, group)]), id.vars = c("group"))
+          counts_anchor_reshape_df = data.frame(counts_anchor_reshape[,list(target1_frac,target2_frac,target3_frac)])
         } else if(ncol(counts_anchor_reshape) == 8){
-          long_counts_anchor_reshape <- melt(setDT(counts_anchor_reshape[,list(target1_frac,target2_frac,group)]), id.vars = c("group"))
+          long_counts_anchor_reshape <- melt(setDT(counts_anchor_reshape[,list(target1_frac, target2_frac, group)]), id.vars = c("group"))
+          counts_anchor_reshape_df = data.frame(counts_anchor_reshape[,list(target1_frac,target2_frac)])
         } 
         g1 = ggplot(long_counts_anchor_reshape, aes(x=group, y=value, fill=as.factor(variable))) + geom_boxplot() + theme_bw() +ggtitle(anchor_interest)
         g2 = ggplot(counts_anchor_reshape, aes(x = target1_count, y = target2_count, shape = as.factor(group), color = as.factor(group))) + geom_point() + theme_bw()
-        print(grid.arrange(g1, g2, nrow = 2))
+        
+        ## g3 is the heatmap for target fractions per sample
+        rownames(counts_anchor_reshape_df) = c(1:nrow(counts_anchor_reshape_df))
+        my_annotation_row = data.frame(counts_anchor_reshape$group)
+        rownames(my_annotation_row) = rownames(counts_anchor_reshape_df)
+        names(my_annotation_row) = "group"
+        g3 = pheatmap(counts_anchor_reshape_df,annotation_row = my_annotation_row, show_rownames = FALSE, cluster_cols = FALSE)
+        print(grid.arrange(grobs = list(g1,g2,  g3[[4]]),layout_matrix=rbind(c(1,3),c(2,3))))
         dev.off()
       }
     }
