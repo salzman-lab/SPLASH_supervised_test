@@ -5,6 +5,7 @@ The repository contains the script for performing multinomial regression with la
 - `directory`: NOMAD run directory
 - `metadata_file`: path to metadata file
 - `run_name`: prefix for the output folder
+- `datatype`: can be either `10x` when input data is 10x or `non10x` when input data is not 10x
 - `input_anchors`: list of specific anchors
 - `sample_fraction_cutoff`: cutoff for the minimum fraction of samples each anchor should be present
 - `num_anchors`: maximum number of anchors to be tested
@@ -24,14 +25,24 @@ Rscript NOMAD_spervised_anchor.R /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/
 Rscript NOMAD_spervised_anchor.R /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/runs/CCLE_all/ /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/utility_files/CCLE_metadata_modified.tsv one_unaligned_target_anchors 0.4 20000
 ```
 ## metadata file format:
-The only requirement for metadata file is that the first column must contain sample names and the second column must contain the assigned class/group/category/celltype to each sample and that the first line shoule be column lines (column names can be anything). The two columns are renamed as "sample_name" and "group" in the script. Below is an example metadata file:
+### non-10x data:
+The only requirement for metadata file is that the first column and second columns must be for sample names and the assigned class/group/category/celltype to each sample. Also, the first row must be column names (column names can be anything). The two columns are subsequently renamed as "sample_name" and "group" in the script. Below is an example metadata file:
 ```
-Run	type
+sample_name	type
 SRR8788980	carcinoma
 SRR8788981	melanoma
 SRR8788982	lymphoma
 SRR8788983	carcinoma
 SRR8657060	carcinoma
+```
+### 10x data:
+Meta data file for 10x data must have an extra column (second column) for cell barcodes. Other requirements are the same as non-10x data:
+```
+sample_name cell cell_type
+S2	AAACCCAAGACACACG	AT2
+S1	AAACCCAAGCCATGCC	NK
+S1	AAACCCAAGGGAACAA	Mac
+S4	AAACCCAAGGGTTGCA	NK
 ```
 ## Output files: 
 The output directory for the GLM test is: `directory`/`run_name`_supervised_metadata/.
