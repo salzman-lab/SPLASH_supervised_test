@@ -2,6 +2,7 @@ library(data.table)
 library(glmnet)
 library(ggplot2)
 library(gridExtra)
+library(pheatmap)
 
 # script only looks at the first column of the metadata file (for sample names) and the second column (for the assigned class/group/category/celltype to each sample)
 # metadata file must have column names and they could be anything, after reading in metadata file, the two columns are named as "sample_name" and "group"
@@ -100,12 +101,13 @@ for (counter in 1:nrow(selected_anchors)){
     counts_anchor[,target_count := sum(count),by=target] # compute total counts for each target
     top_targets = counts_anchor[!duplicated(target)][order(-target_count)]$target[1:4] # find the top two targets
     counts_anchor[!target%in%top_targets,target:="other"] # assigning all targets after target 4 to other targets
-    counts_anchor = rbind(counts_anchor[target %in% top_targets][order(-target_count)],counts_anchor[target=="other"]) # add all "other" targets to the end of the counts_anchor
+    counts_anchor = counts_anchor[target %in% top_targets][order(-target_count)] # add all "other" targets to the end of the counts_anchor
     counts_anchor[,target_count := sum(count),by=target] # again recompute target count as now I have collapsed targets after target 4 to "other" targets
     counts_anchor = counts_anchor[!duplicated(paste(anchor,target,sample_name))] # remove duplicate entries where there are now multiple other targets per anchor and sample
     
     counts_anchor[,anchor_count_per_sample:=sum(count),by=list(anchor,sample_name)]
     counts_anchor[,fraction:=count/anchor_count_per_sample,by=1:nrow(counts_anchor)] # compute target fraction per sample
+    counts_anchor = counts_anchor[anchor_count_per_sample>5]
     counts_anchor_reshape = reshape(counts_anchor[,list(sample_name,target,fraction,count)], idvar="sample_name", timevar="target", direction="wide")
     
     if (ncol(counts_anchor_reshape) == 11){
@@ -147,7 +149,7 @@ for (counter in 1:nrow(selected_anchors)){
     counts_anchor_reshape = counts_anchor_reshape[!is.na(group)] 
     counts_anchor_reshape[,num_per_group:=.N,by=group]
     counts_anchor_reshape[,weight:=1/num_per_group]
-    counts_anchor_reshape = counts_anchor_reshape[num_per_group>3]
+    counts_anchor_reshape = counts_anchor_reshape[num_per_group>5]
     
     # below if there is at least two groups for the anchor we perform GLMnet multinomial regression 
     if (length(unique(counts_anchor_reshape$group))>1){
