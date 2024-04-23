@@ -47,5 +47,8 @@ S4	AAACCCAAGGGTTGCA	NK
 ## Output files: 
 The output directory for the GLM test is: `directory`/`run_name`_supervised_metadata/.
 - `GLM_supervised_anchors.tsv`: the output file containing anchors with non-zero GLM_coefficients whose largest GLM coefficient is greater than 1.
-- `plots`: this subfolder contains the plots for visualizing the anchors with metadata-dependent target fraction varaition. For each anchor, two plots will be generated in a pdf named as anchor sequence, a box plot for showing the fraction of target1 per sample grouped by the category and a scatterplot for showing the counts for target1 and target2 per sample colorcoded by the metadata category.  
+- `plots`: this subfolder contains the plots for visualizing the anchors with metadata-dependent target fraction varaition. For each anchor, two plots will be generated in a pdf named as anchor sequence, a box plot for showing the fraction of target1 per sample grouped by the category and a scatterplot for showing the counts for target1 and target2 per sample colorcoded by the metadata category.
+
+## Contact
+Please contact Roozbeh Dehghannasiri (rdehghan@stanford.edu).
  
