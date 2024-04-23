@@ -1,8 +1,8 @@
-# NOMAD GLM-based supervised test
+# SPLASH GLM-based supervised test
 The repository contains the script for performing multinomial regression with lasso to identify and visualize anchors with metadata-dependent target fraction  
 
 ## Inputs:
-- `directory`: NOMAD run directory
+- `directory`: SPLASH run directory
 - `metadata_file`: path to metadata file
 - `run_name`: prefix for the output folder
 - `datatype`: can be either `10x` when input data is 10x or `non10x` when input data is not 10x
@@ -17,12 +17,12 @@ The repository contains the script for performing multinomial regression with la
 ## example commands:
 - specific list of anchors:
 ```
-Rscript NOMAD_spervised_anchor.R /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/runs/CCLE_all/ /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/utility_files/CCLE_metadata_modified.tsv one_unaligned_target_anchors /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/runs/CCLE_all/concatentaion_based_classified_compactors_one_SJ_one_unaligned.tsv
+Rscript SPLASH_spervised_anchor.R /oak/stanford/groups/horence/Roozbeh/SPLASH_10x/runs/CCLE_all/ /oak/stanford/groups/horence/Roozbeh/SPLASH_10x/utility_files/CCLE_metadata_modified.tsv one_unaligned_target_anchors /oak/stanford/groups/horence/Roozbeh/SPLASH_10x/runs/CCLE_all/concatentaion_based_classified_compactors_one_SJ_one_unaligned.tsv
 ```
 
 - anchors with the highest effect size:
  ```
-Rscript NOMAD_spervised_anchor.R /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/runs/CCLE_all/ /oak/stanford/groups/horence/Roozbeh/NOMAD_10x/utility_files/CCLE_metadata_modified.tsv one_unaligned_target_anchors 0.4 20000
+Rscript SPLASH_spervised_anchor.R /oak/stanford/groups/horence/Roozbeh/SPLASH_10x/runs/CCLE_all/ /oak/stanford/groups/horence/Roozbeh/SPLASH_10x/utility_files/CCLE_metadata_modified.tsv one_unaligned_target_anchors 0.4 20000
 ```
 ## metadata file format:
 ### non-10x data:
